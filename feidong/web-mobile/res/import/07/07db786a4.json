@@ -1,1 +1,84 @@
-[{"__type__":"cc.SpriteFrame","content":{"name":"run1","texture":"891a5ae0-7a2b-4365-b96a-9e2ea8de3d2f","rect":[2,7,27,35],"offset":[0.5,0.5],"originalSize":[30,50]}},{"__type__":"cc.AnimationClip","_name":"heroRun","_duration":0.6,"sample":10,"speed":2,"wrapMode":2,"curveData":{"comps":{"cc.Sprite":{"spriteFrame":[{"frame":0,"value":{"__uuid__":"fc7a980a-0b25-411e-beb7-97b6e4545b13"}},{"frame":0.2,"value":{"__uuid__":"a0c9aeaf-0a1c-4aec-8877-f4c97e0a7895"}},{"frame":0.3,"value":{"__uuid__":"a0c9aeaf-0a1c-4aec-8877-f4c97e0a7895"}},{"frame":0.5,"value":{"__uuid__":"fc7a980a-0b25-411e-beb7-97b6e4545b13"}}]}}}},{"__type__":"cc.SpriteFrame","content":{"name":"run2","texture":"586362c7-2ea3-43c2-83aa-a39073314733","rect":[2,7,27,35],"offset":[0.5,0.5],"originalSize":[30,50]}}]
+[
+  {
+    "__type__": "cc.SpriteFrame",
+    "content": {
+      "name": "run1",
+      "texture": "891a5ae0-7a2b-4365-b96a-9e2ea8de3d2f",
+      "rect": [
+        2,
+        7,
+        27,
+        35
+      ],
+      "offset": [
+        0.5,
+        0.5
+      ],
+      "originalSize": [
+        30,
+        50
+      ]
+    }
+  },
+  {
+    "__type__": "cc.AnimationClip",
+    "_name": "heroRun",
+    "_duration": 0.6,
+    "sample": 10,
+    "speed": 2,
+    "wrapMode": 2,
+    "curveData": {
+      "comps": {
+        "cc.Sprite": {
+          "spriteFrame": [
+            {
+              "frame": 0,
+              "value": {
+                "__uuid__": "fc7a980a-0b25-411e-beb7-97b6e4545b13"
+              }
+            },
+            {
+              "frame": 0.2,
+              "value": {
+                "__uuid__": "a0c9aeaf-0a1c-4aec-8877-f4c97e0a7895"
+              }
+            },
+            {
+              "frame": 0.3,
+              "value": {
+                "__uuid__": "a0c9aeaf-0a1c-4aec-8877-f4c97e0a7895"
+              }
+            },
+            {
+              "frame": 0.5,
+              "value": {
+                "__uuid__": "fc7a980a-0b25-411e-beb7-97b6e4545b13"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "__type__": "cc.SpriteFrame",
+    "content": {
+      "name": "run2",
+      "texture": "586362c7-2ea3-43c2-83aa-a39073314733",
+      "rect": [
+        2,
+        7,
+        27,
+        35
+      ],
+      "offset": [
+        0.5,
+        0.5
+      ],
+      "originalSize": [
+        30,
+        50
+      ]
+    }
+  }
+]

@@ -1,1 +1,644 @@
-!function(t,n){"object"==typeof exports&&"object"==typeof module?module.exports=n():"function"==typeof define&&define.amd?define("StateMachine",[],n):"object"==typeof exports?exports.StateMachine=n():t.StateMachine=n()}(this,function(){return function(t){function n(e){if(i[e])return i[e].exports;var s=i[e]={i:e,l:!1,exports:{}};return t[e].call(s.exports,s,s.exports,n),s.l=!0,s.exports}var i={};return n.m=t,n.c=i,n.i=function(t){return t},n.d=function(t,i,e){n.o(t,i)||Object.defineProperty(t,i,{configurable:!1,enumerable:!0,get:e})},n.n=function(t){var i=t&&t.__esModule?function(){return t["default"]}:function(){return t};return n.d(i,"a",i),i},n.o=function(t,n){return Object.prototype.hasOwnProperty.call(t,n)},n.p="",n(n.s=6)}([function(t,n,i){"use strict";t.exports=function(t,n){var i,e,s;for(i=1;i<arguments.length;i++){e=arguments[i];for(s in e)e.hasOwnProperty(s)&&(t[s]=e[s])}return t}},function(t,n,i){"use strict";window.mixin=i(0),t.exports={build:function(t,n){var i,e,s,o=n.plugins;for(i=0,e=o.length;i<e;i++)s=o[i],s.methods&&mixin(t,s.methods),s.properties&&Object.defineProperties(t,s.properties)},hook:function(t,n,i){var e,s,o,r,a=t.config.plugins,c=[t.context];for(i&&(c=c.concat(i)),e=0,s=a.length;e<s;e++)r=a[e],o=a[e][n],o&&o.apply(r,c)}}},function(t,n,i){"use strict";t.exports=function(t){var n,i=t.split(/[_-]/),e=i[0];for(n=1;n<i.length;n++)e=e+i[n].charAt(0).toUpperCase()+i[n].substring(1);return e}},function(t,n,i){"use strict";function e(t,n){t=t||{},this.options=t,this.defaults=n.defaults,this.states=[],this.transitions=[],this.map={},this.lifecycle=this.configureLifecycle(),this.init=this.configureInitTransition(t.init),this.data=this.configureData(t.data),this.methods=this.configureMethods(t.methods),this.map[this.defaults.wildcard]={},this.configureTransitions(t.transitions||[]),this.plugins=this.configurePlugins(t.plugins,n.plugin)}window.mixin=i(0),window.camelize=i(2),mixin(e.prototype,{addState:function(t){this.map[t]||(this.states.push(t),this.addStateLifecycleNames(t),this.map[t]={})},addStateLifecycleNames:function(t){this.lifecycle.onEnter[t]=camelize("on-enter-"+t),this.lifecycle.onLeave[t]=camelize("on-leave-"+t),this.lifecycle.on[t]=camelize("on-"+t)},addTransition:function(t){this.transitions.indexOf(t)<0&&(this.transitions.push(t),this.addTransitionLifecycleNames(t))},addTransitionLifecycleNames:function(t){this.lifecycle.onBefore[t]=camelize("on-before-"+t),this.lifecycle.onAfter[t]=camelize("on-after-"+t),this.lifecycle.on[t]=camelize("on-"+t)},mapTransition:function(t){var n=t.name,i=t.from,e=t.to;return this.addState(i),"function"!=typeof e&&this.addState(e),this.addTransition(n),this.map[i][n]=t,t},configureLifecycle:function(){return{onBefore:{transition:camelize("on-before-transition")},onAfter:{transition:camelize("on-after-transition")},onEnter:{state:camelize("on-enter-state")},onLeave:{state:camelize("on-leave-state")},on:{transition:camelize("on-transition")}}},configureInitTransition:function(t){return"string"==typeof t?this.mapTransition(mixin({},this.defaults.init,{to:t,active:!0})):"object"==typeof t?this.mapTransition(mixin({},this.defaults.init,t,{active:!0})):(this.addState(this.defaults.init.from),this.defaults.init)},configureData:function(t){return"function"==typeof t?t:"object"==typeof t?function(){return t}:function(){return{}}},configureMethods:function(t){return t||{}},configurePlugins:function(t,n){t=t||[];var i,e,s;for(i=0,e=t.length;i<e;i++)s=t[i],"function"==typeof s&&(t[i]=s=s()),s.configure&&s.configure(this);return t},configureTransitions:function(t){var n,i,e,s,o,r=this.defaults.wildcard;for(i=0;i<t.length;i++)for(e=t[i],s=Array.isArray(e.from)?e.from:[e.from||r],o=e.to||r,n=0;n<s.length;n++)this.mapTransition({name:e.name,from:s[n],to:o})},transitionFor:function(t,n){var i=this.defaults.wildcard;return this.map[t][n]||this.map[i][n]},transitionsFor:function(t){var n=this.defaults.wildcard;return Object.keys(this.map[t]).concat(Object.keys(this.map[n]))},allStates:function(){return this.states},allTransitions:function(){return this.transitions}}),t.exports=e},function(t,n,i){function e(t,n){this.context=t,this.config=n,this.state=n.init.from,this.observers=[t]}window.mixin=i(0),window.Exception=i(5),window.plugin=i(1),window.UNOBSERVED=[null,[]],mixin(e.prototype,{init:function(t){if(mixin(this.context,this.config.data.apply(this.context,t)),plugin.hook(this,"init"),this.config.init.active)return this.fire(this.config.init.name,[])},is:function(t){return Array.isArray(t)?t.indexOf(this.state)>=0:this.state===t},isPending:function(){return this.pending},can:function(t){return!this.isPending()&&!!this.seek(t)},cannot:function(t){return!this.can(t)},allStates:function(){return this.config.allStates()},allTransitions:function(){return this.config.allTransitions()},transitions:function(){return this.config.transitionsFor(this.state)},seek:function(t,n){var i=this.config.defaults.wildcard,e=this.config.transitionFor(this.state,t),s=e&&e.to;return"function"==typeof s?s.apply(this.context,n):s===i?this.state:s},fire:function(t,n){return this.transit(t,this.state,this.seek(t,n),n)},transit:function(t,n,i,e){var s=this.config.lifecycle,o=this.config.options.observeUnchangedState||n!==i;return i?this.isPending()?this.context.onPendingTransition(t,n,i):(this.config.addState(i),this.beginTransit(),e.unshift({transition:t,from:n,to:i,fsm:this.context}),this.observeEvents([this.observersForEvent(s.onBefore.transition),this.observersForEvent(s.onBefore[t]),o?this.observersForEvent(s.onLeave.state):UNOBSERVED,o?this.observersForEvent(s.onLeave[n]):UNOBSERVED,this.observersForEvent(s.on.transition),o?["doTransit",[this]]:UNOBSERVED,o?this.observersForEvent(s.onEnter.state):UNOBSERVED,o?this.observersForEvent(s.onEnter[i]):UNOBSERVED,o?this.observersForEvent(s.on[i]):UNOBSERVED,this.observersForEvent(s.onAfter.transition),this.observersForEvent(s.onAfter[t]),this.observersForEvent(s.on[t])],e)):this.context.onInvalidTransition(t,n,i)},beginTransit:function(){this.pending=!0},endTransit:function(t){return this.pending=!1,t},doTransit:function(t){this.state=t.to},observe:function(t){if(2===t.length){var n={};n[t[0]]=t[1],this.observers.push(n)}else this.observers.push(t[0])},observersForEvent:function(t){for(var n,i=0,e=this.observers.length,s=[];i<e;i++)n=this.observers[i],n[t]&&s.push(n);return[t,s,!0]},observeEvents:function(t,n,i){if(0===t.length)return this.endTransit(!0);var e=t[0][0],s=t[0][1],o=t[0][2];if(n[0].event=e,e&&o&&e!==i&&plugin.hook(this,"lifecycle",n),0===s.length)return t.shift(),this.observeEvents(t,n,e);var r=s.shift(),a=r[e].apply(r,n);return a&&"function"==typeof a.then?a.then(this.observeEvents.bind(this,t,n,e))["catch"](this.endTransit.bind(this)):a===!1?this.endTransit(!1):this.observeEvents(t,n,e)},onInvalidTransition:function(t,n,i){throw new Exception("transition is invalid in current state",t,n,i,this.state)},onPendingTransition:function(t,n,i){throw new Exception("transition is invalid while previous transition is still in progress",t,n,i,this.state)}}),t.exports=e},function(t,n,i){"use strict";t.exports=function(t,n,i,e,s){this.message=t,this.transition=n,this.from=i,this.to=e,this.current=s}},function(t,n,i){"use strict";function e(t){return o(this||{},t)}function s(){var t,n;"function"==typeof arguments[0]?(t=arguments[0],n=arguments[1]||{}):(t=function(){this._fsm.apply(this,arguments)},n=arguments[0]||{});var i=new Config(n,e);return r(t.prototype,i),t.prototype._fsm.config=i,t}function o(t,n){var i=new Config(n,e);return r(t,i),t._fsm(),t}function r(t,n){if("object"!=typeof t||Array.isArray(t))throw Error("StateMachine can only be applied to objects");plugin.build(t,n),Object.defineProperties(t,PublicProperties),mixin(t,PublicMethods),mixin(t,n.methods),n.allTransitions().forEach(function(n){t[camelize(n)]=function(){return this._fsm.fire(n,[].slice.call(arguments))}}),t._fsm=function(){this._fsm=new JSM(this,n),this._fsm.init(arguments)}}window.mixin=i(0),window.camelize=i(2),window.plugin=i(1),window.Config=i(3),window.JSM=i(4),window.PublicMethods={is:function(t){return this._fsm.is(t)},can:function(t){return this._fsm.can(t)},cannot:function(t){return this._fsm.cannot(t)},observe:function(){return this._fsm.observe(arguments)},transitions:function(){return this._fsm.transitions()},allTransitions:function(){return this._fsm.allTransitions()},allStates:function(){return this._fsm.allStates()},onInvalidTransition:function(t,n,i){return this._fsm.onInvalidTransition(t,n,i)},onPendingTransition:function(t,n,i){return this._fsm.onPendingTransition(t,n,i)}},window.PublicProperties={state:{configurable:!1,enumerable:!0,get:function(){return this._fsm.state},set:function(t){throw Error("use transitions to change state")}}},e.version="3.0.0-rc.1",e.factory=s,e.apply=o,e.defaults={wildcard:"*",init:{name:"init",from:"none"}},t.exports=e}])});
+(function webpackUniversalModuleDefinition(root, factory) {
+	if(typeof exports === 'object' && typeof module === 'object')
+		module.exports = factory();
+	else if(typeof define === 'function' && define.amd)
+		define("StateMachine", [], factory);
+	else if(typeof exports === 'object')
+		exports["StateMachine"] = factory();
+	else
+		root["StateMachine"] = factory();
+})(this, function() {
+return /******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId])
+/******/ 			return installedModules[moduleId].exports;
+
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			i: moduleId,
+/******/ 			l: false,
+/******/ 			exports: {}
+/******/ 		};
+
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+
+/******/ 		// Flag the module as loaded
+/******/ 		module.l = true;
+
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+
+
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+
+/******/ 	// identity function for calling harmony imports with the correct context
+/******/ 	__webpack_require__.i = function(value) { return value; };
+
+/******/ 	// define getter function for harmony exports
+/******/ 	__webpack_require__.d = function(exports, name, getter) {
+/******/ 		if(!__webpack_require__.o(exports, name)) {
+/******/ 			Object.defineProperty(exports, name, {
+/******/ 				configurable: false,
+/******/ 				enumerable: true,
+/******/ 				get: getter
+/******/ 			});
+/******/ 		}
+/******/ 	};
+
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = function(module) {
+/******/ 		var getter = module && module.__esModule ?
+/******/ 			function getDefault() { return module['default']; } :
+/******/ 			function getModuleExports() { return module; };
+/******/ 		__webpack_require__.d(getter, 'a', getter);
+/******/ 		return getter;
+/******/ 	};
+
+/******/ 	// Object.prototype.hasOwnProperty.call
+/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "";
+
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(__webpack_require__.s = 6);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function(target, sources) {
+  var n, source, key;
+  for(n = 1 ; n < arguments.length ; n++) {
+    source = arguments[n];
+    for(key in source) {
+      if (source.hasOwnProperty(key))
+        target[key] = source[key];
+    }
+  }
+  return target;
+}
+
+
+/***/ },
+/* 1 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+//-------------------------------------------------------------------------------------------------
+
+window.mixin = __webpack_require__(0);
+
+//-------------------------------------------------------------------------------------------------
+
+module.exports = {
+
+  build: function(target, config) {
+    var n, max, plugin, plugins = config.plugins;
+    for(n = 0, max = plugins.length ; n < max ; n++) {
+      plugin = plugins[n];
+      if (plugin.methods)
+        mixin(target, plugin.methods);
+      if (plugin.properties)
+        Object.defineProperties(target, plugin.properties);
+    }
+  },
+
+  hook: function(fsm, name, additional) {
+    var n, max, method, plugin,
+        plugins = fsm.config.plugins,
+        args    = [fsm.context];
+
+    if (additional)
+      args = args.concat(additional)
+
+    for(n = 0, max = plugins.length ; n < max ; n++) {
+      plugin = plugins[n]
+      method = plugins[n][name]
+      if (method)
+        method.apply(plugin, args);
+    }
+  }
+
+}
+
+//-------------------------------------------------------------------------------------------------
+
+
+/***/ },
+/* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function(label) {
+  var n, word, words = label.split(/[_-]/), result = words[0];
+  for(n = 1 ; n < words.length ; n++) {
+    result = result + words[n].charAt(0).toUpperCase() + words[n].substring(1);
+  }
+  return result;
+}
+
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+//-------------------------------------------------------------------------------------------------
+
+window.mixin    = __webpack_require__(0),
+window.camelize = __webpack_require__(2);
+
+//-------------------------------------------------------------------------------------------------
+
+function Config(options, StateMachine) {
+
+  options = options || {};
+
+  this.options     = options; // preserving original options can be useful (e.g visualize plugin)
+  this.defaults    = StateMachine.defaults;
+  this.states      = [];
+  this.transitions = [];
+  this.map         = {};
+  this.lifecycle   = this.configureLifecycle();
+  this.init        = this.configureInitTransition(options.init);
+  this.data        = this.configureData(options.data);
+  this.methods     = this.configureMethods(options.methods);
+
+  this.map[this.defaults.wildcard] = {};
+
+  this.configureTransitions(options.transitions || []);
+
+  this.plugins = this.configurePlugins(options.plugins, StateMachine.plugin);
+
+}
+
+//-------------------------------------------------------------------------------------------------
+
+mixin(Config.prototype, {
+
+  addState: function(name) {
+    if (!this.map[name]) {
+      this.states.push(name);
+      this.addStateLifecycleNames(name);
+      this.map[name] = {};
+    }
+  },
+
+  addStateLifecycleNames: function(name) {
+    this.lifecycle.onEnter[name] = camelize('on-enter-' + name);
+    this.lifecycle.onLeave[name] = camelize('on-leave-' + name);
+    this.lifecycle.on[name]      = camelize('on-' + name);
+  },
+
+  addTransition: function(name) {
+    if (this.transitions.indexOf(name) < 0) {
+      this.transitions.push(name);
+      this.addTransitionLifecycleNames(name);
+    }
+  },
+
+  addTransitionLifecycleNames: function(name) {
+    this.lifecycle.onBefore[name] = camelize('on-before-' + name);
+    this.lifecycle.onAfter[name]  = camelize('on-after-' + name);
+    this.lifecycle.on[name]       = camelize('on-' + name);
+  },
+
+  mapTransition: function(transition) {
+    var name = transition.name,
+        from = transition.from,
+        to   = transition.to;
+    this.addState(from);
+    if (typeof to !== 'function')
+      this.addState(to);
+    this.addTransition(name);
+    this.map[from][name] = transition;
+    return transition;
+  },
+
+  configureLifecycle: function() {
+    return {
+      onBefore: { transition: camelize('on-before-transition') },
+      onAfter:  { transition: camelize('on-after-transition')  },
+      onEnter:  { state:      camelize('on-enter-state')       },
+      onLeave:  { state:      camelize('on-leave-state')       },
+      on:       { transition: camelize('on-transition')        }
+    };
+  },
+
+  configureInitTransition: function(init) {
+    if (typeof init === 'string') {
+      return this.mapTransition(mixin({}, this.defaults.init, { to: init, active: true }));
+    }
+    else if (typeof init === 'object') {
+      return this.mapTransition(mixin({}, this.defaults.init, init, { active: true }));
+    }
+    else {
+      this.addState(this.defaults.init.from);
+      return this.defaults.init;
+    }
+  },
+
+  configureData: function(data) {
+    if (typeof data === 'function')
+      return data;
+    else if (typeof data === 'object')
+      return function() { return data; }
+    else
+      return function() { return {};  }
+  },
+
+  configureMethods: function(methods) {
+    return methods || {};
+  },
+
+  configurePlugins: function(plugins, builtin) {
+    plugins = plugins || [];
+    var n, max, plugin;
+    for(n = 0, max = plugins.length ; n < max ; n++) {
+      plugin = plugins[n];
+      if (typeof plugin === 'function')
+        plugins[n] = plugin = plugin()
+      if (plugin.configure)
+        plugin.configure(this);
+    }
+    return plugins
+  },
+
+  configureTransitions: function(transitions) {
+    var i, n, transition, from, to, wildcard = this.defaults.wildcard;
+    for(n = 0 ; n < transitions.length ; n++) {
+      transition = transitions[n];
+      from  = Array.isArray(transition.from) ? transition.from : [transition.from || wildcard]
+      to    = transition.to || wildcard;
+      for(i = 0 ; i < from.length ; i++) {
+        this.mapTransition({ name: transition.name, from: from[i], to: to });
+      }
+    }
+  },
+
+  transitionFor: function(state, transition) {
+    var wildcard = this.defaults.wildcard;
+    return this.map[state][transition] ||
+           this.map[wildcard][transition];
+  },
+
+  transitionsFor: function(state) {
+    var wildcard = this.defaults.wildcard;
+    return Object.keys(this.map[state]).concat(Object.keys(this.map[wildcard]));
+  },
+
+  allStates: function() {
+    return this.states;
+  },
+
+  allTransitions: function() {
+    return this.transitions;
+  }
+
+});
+
+//-------------------------------------------------------------------------------------------------
+
+module.exports = Config;
+
+//-------------------------------------------------------------------------------------------------
+
+
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+
+  window.mixin      = __webpack_require__(0),
+  window.Exception  = __webpack_require__(5),
+  window.plugin     = __webpack_require__(1),
+  window.UNOBSERVED = [ null, [] ];
+
+//-------------------------------------------------------------------------------------------------
+
+function JSM(context, config) {
+  this.context   = context;
+  this.config    = config;
+  this.state     = config.init.from;
+  this.observers = [context];
+}
+
+//-------------------------------------------------------------------------------------------------
+
+mixin(JSM.prototype, {
+
+  init: function(args) {
+    mixin(this.context, this.config.data.apply(this.context, args));
+    plugin.hook(this, 'init');
+    if (this.config.init.active)
+      return this.fire(this.config.init.name, []);
+  },
+
+  is: function(state) {
+    return Array.isArray(state) ? (state.indexOf(this.state) >= 0) : (this.state === state);
+  },
+
+  isPending: function() {
+    return this.pending;
+  },
+
+  can: function(transition) {
+    return !this.isPending() && !!this.seek(transition);
+  },
+
+  cannot: function(transition) {
+    return !this.can(transition);
+  },
+
+  allStates: function() {
+    return this.config.allStates();
+  },
+
+  allTransitions: function() {
+    return this.config.allTransitions();
+  },
+
+  transitions: function() {
+    return this.config.transitionsFor(this.state);
+  },
+
+  seek: function(transition, args) {
+    var wildcard = this.config.defaults.wildcard,
+        entry    = this.config.transitionFor(this.state, transition),
+        to       = entry && entry.to;
+    if (typeof to === 'function')
+      return to.apply(this.context, args);
+    else if (to === wildcard)
+      return this.state
+    else
+      return to
+  },
+
+  fire: function(transition, args) {
+    return this.transit(transition, this.state, this.seek(transition, args), args);
+  },
+
+  transit: function(transition, from, to, args) {
+
+    var lifecycle = this.config.lifecycle,
+        changed   = this.config.options.observeUnchangedState || (from !== to);
+
+    if (!to)
+      return this.context.onInvalidTransition(transition, from, to);
+
+    if (this.isPending())
+      return this.context.onPendingTransition(transition, from, to);
+
+    this.config.addState(to);  // might need to add this state if it's unknown (e.g. conditional transition or goto)
+
+    this.beginTransit();
+
+    args.unshift({             // this context will be passed to each lifecycle event observer
+      transition: transition,
+      from:       from,
+      to:         to,
+      fsm:        this.context
+    });
+
+    return this.observeEvents([
+                this.observersForEvent(lifecycle.onBefore.transition),
+                this.observersForEvent(lifecycle.onBefore[transition]),
+      changed ? this.observersForEvent(lifecycle.onLeave.state) : UNOBSERVED,
+      changed ? this.observersForEvent(lifecycle.onLeave[from]) : UNOBSERVED,
+                this.observersForEvent(lifecycle.on.transition),
+      changed ? [ 'doTransit', [ this ] ]                       : UNOBSERVED,
+      changed ? this.observersForEvent(lifecycle.onEnter.state) : UNOBSERVED,
+      changed ? this.observersForEvent(lifecycle.onEnter[to])   : UNOBSERVED,
+      changed ? this.observersForEvent(lifecycle.on[to])        : UNOBSERVED,
+                this.observersForEvent(lifecycle.onAfter.transition),
+                this.observersForEvent(lifecycle.onAfter[transition]),
+                this.observersForEvent(lifecycle.on[transition])
+    ], args);
+  },
+
+  beginTransit: function()          { this.pending = true;                 },
+  endTransit:   function(result)    { this.pending = false; return result; },
+  doTransit:    function(lifecycle) { this.state = lifecycle.to;           },
+
+  observe: function(args) {
+    if (args.length === 2) {
+      var observer = {};
+      observer[args[0]] = args[1];
+      this.observers.push(observer);
+    }
+    else {
+      this.observers.push(args[0]);
+    }
+  },
+
+  observersForEvent: function(event) { // TODO: this could be cached
+    var n = 0, max = this.observers.length, observer, result = [];
+    for( ; n < max ; n++) {
+      observer = this.observers[n];
+      if (observer[event])
+        result.push(observer);
+    }
+    return [ event, result, true ]
+  },
+
+  observeEvents: function(events, args, previousEvent) {
+    if (events.length === 0) {
+      return this.endTransit(true);
+    }
+
+    var event     = events[0][0],
+        observers = events[0][1],
+        pluggable = events[0][2];
+
+    args[0].event = event;
+    if (event && pluggable && event !== previousEvent)
+      plugin.hook(this, 'lifecycle', args);
+
+    if (observers.length === 0) {
+      events.shift();
+      return this.observeEvents(events, args, event);
+    }
+    else {
+      var observer = observers.shift(),
+          result = observer[event].apply(observer, args);
+      if (result && typeof result.then === 'function') {
+        return result.then(this.observeEvents.bind(this, events, args, event))
+                     .catch(this.endTransit.bind(this))
+      }
+      else if (result === false) {
+        return this.endTransit(false);
+      }
+      else {
+        return this.observeEvents(events, args, event);
+      }
+    }
+  },
+
+  onInvalidTransition: function(transition, from, to) {
+    throw new Exception("transition is invalid in current state", transition, from, to, this.state);
+  },
+
+  onPendingTransition: function(transition, from, to) {
+    throw new Exception("transition is invalid while previous transition is still in progress", transition, from, to, this.state);
+  }
+
+});
+
+//-------------------------------------------------------------------------------------------------
+
+module.exports = JSM;
+
+//-------------------------------------------------------------------------------------------------
+
+
+/***/ },
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function(message, transition, from, to, current) {
+  this.message    = message;
+  this.transition = transition;
+  this.from       = from;
+  this.to         = to;
+  this.current    = current;
+}
+
+
+/***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+//-----------------------------------------------------------------------------------------------
+
+window.mixin    = __webpack_require__(0),
+window.camelize = __webpack_require__(2),
+window.plugin   = __webpack_require__(1),
+window.Config   = __webpack_require__(3),
+window.JSM      = __webpack_require__(4);
+
+//-----------------------------------------------------------------------------------------------
+
+window.PublicMethods = {
+  is:                  function(state)       { return this._fsm.is(state)                                     },
+  can:                 function(transition)  { return this._fsm.can(transition)                               },
+  cannot:              function(transition)  { return this._fsm.cannot(transition)                            },
+  observe:             function()            { return this._fsm.observe(arguments)                            },
+  transitions:         function()            { return this._fsm.transitions()                                 },
+  allTransitions:      function()            { return this._fsm.allTransitions()                              },
+  allStates:           function()            { return this._fsm.allStates()                                   },
+  onInvalidTransition: function(t, from, to) { return this._fsm.onInvalidTransition(t, from, to)              },
+  onPendingTransition: function(t, from, to) { return this._fsm.onPendingTransition(t, from, to)              },
+}
+
+window.PublicProperties = {
+  state: {
+    configurable: false,
+    enumerable:   true,
+    get: function() {
+      return this._fsm.state;
+    },
+    set: function(state) {
+      throw Error('use transitions to change state')
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------------------------
+
+function StateMachine(options) {
+  return apply(this || {}, options);
+}
+
+function factory() {
+  var cstor, options;
+  if (typeof arguments[0] === 'function') {
+    cstor   = arguments[0];
+    options = arguments[1] || {};
+  }
+  else {
+    cstor   = function() { this._fsm.apply(this, arguments) };
+    options = arguments[0] || {};
+  }
+  var config = new Config(options, StateMachine);
+  build(cstor.prototype, config);
+  cstor.prototype._fsm.config = config; // convenience access to shared config without needing an instance
+  return cstor;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+function apply(instance, options) {
+  var config = new Config(options, StateMachine);
+  build(instance, config);
+  instance._fsm();
+  return instance;
+}
+
+function build(target, config) {
+  if ((typeof target !== 'object') || Array.isArray(target))
+    throw Error('StateMachine can only be applied to objects');
+  plugin.build(target, config);
+  Object.defineProperties(target, PublicProperties);
+  mixin(target, PublicMethods);
+  mixin(target, config.methods);
+  config.allTransitions().forEach(function(transition) {
+    target[camelize(transition)] = function() {
+      return this._fsm.fire(transition, [].slice.call(arguments))
+    }
+  });
+  target._fsm = function() {
+    this._fsm = new JSM(this, config);
+    this._fsm.init(arguments);
+  }
+}
+
+//-----------------------------------------------------------------------------------------------
+
+StateMachine.version  = '3.0.0-rc.1';
+StateMachine.factory  = factory;
+StateMachine.apply    = apply;
+StateMachine.defaults = {
+  wildcard: '*',
+  init: {
+    name: 'init',
+    from: 'none'
+  }
+}
+
+//===============================================================================================
+
+module.exports = StateMachine;
+
+
+/***/ }
+/******/ ]);
+});
